@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Java Lab Grade Calculator</title>
+    <!-- Подключаем современный шрифт -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Основной стиль страницы */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Светлый современный фон */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            margin: 0;
+            color: #333;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        /* Карточка для формы */
+        .form-card {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 30px;
+        }
+
+        /* Стили для полей ввода */
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #555;
+        }
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box; /* Чтобы padding не ломал ширину */
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        /* Кнопка */
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* Блок результата */
+        #currentResult {
+            font-size: 18px;
+            font-weight: bold;
+            color: #27ae60;
+            margin-bottom: 20px;
+            text-align: center;
+            min-height: 24px;
+        }
+
+        hr {
+            width: 100%;
+            max-width: 600px;
+            border: 0;
+            height: 1px;
+            background: #ddd;
+            margin: 30px 0;
+        }
+
+        /* Таблица */
+        h3 {
+            color: #2c3e50;
+        }
+
+        .table-wrapper {
+            width: 100%;
+            max-width: 800px;
+            overflow-x: auto; /* На случай если таблица не влезает на мобильном */
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: #fcfcfc;
+        }
+
+    </style>
+</head>
+<body onload="loadHistory()">
+
+<h1>🎓 Калькулятор Оценки</h1>
+
+<!-- Обернули форму в красивую карточку -->
+<div class="form-card">
+    <div class="input-group">
+        <label for="name">Имя студента:</label>
+        <input type="text" id="name" placeholder="Введите имя">
+    </div>
+
+    <div class="input-group">
+        <label for="s1">Оценка 1 (КР-1):</label>
+        <input type="number" id="s1" placeholder="0-10">
+    </div>
+
+    <div class="input-group">
+        <label for="s2">Оценка 2 (КР-2):</label>
+        <input type="number" id="s2" placeholder="0-10">
+    </div>
+
+    <div class="input-group">
+        <label for="s3">Оценка 3 (Лабы):</label>
+        <input type="number" id="s3" placeholder="0-10">
+    </div>
+
+    <div class="input-group">
+        <label for="s4">Оценка 4 (Тестик):</label>
+        <input type="number" id="s4" placeholder="0-10">
+    </div>
+
+    <button onclick="calculate()">РАССЧИТАТЬ И СОХРАНИТЬ</button>
+</div>
+
+<h3>Текущий результат:</h3>
+<div id="currentResult"></div>
+
+<hr>
+
+<h3>🏆 История оценок (Топ студентов):</h3>
+<div class="table-wrapper">
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Имя</th>
+            <th>Средний балл</th>
+            <th>Вердикт</th>
+        </tr>
+        </thead>
+        <tbody id="historyTable">
+        <!-- Сюда JavaScript будет вставлять строки -->
+        </tbody>
+    </table>
+</div>
+
+<!-- ТВОЙ JS КОД БЕЗ ИЗМЕНЕНИЙ -->
+<script>
+    async function calculate() {
+        const data = {
+            name: document.getElementById('name').value,
+            score1: parseInt(document.getElementById('s1').value) || 0,
+            score2: parseInt(document.getElementById('s2').value) || 0,
+            score3: parseInt(document.getElementById('s3').value) || 0,
+            score4: parseInt(document.getElementById('s4').value) || 0
+        };
+
+        const response = await fetch('/api/calculate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+
+            document.getElementById('currentResult').innerText =
+                "Студент: " + result.name + " | Среднее: " + result.average + " | " + result.finalVerdict;
+
+            loadHistory();
+        } else {
+            alert("Ошибка при сохранении!");
+        }
+    }
+
+    async function loadHistory() {
+        const response = await fetch('/api/history');
+        let data = await response.json();
+
+        data.sort((a, b) => b.average - a.average);
+
+        const tableBody = document.getElementById('historyTable');
+        tableBody.innerHTML = ""; // Очищаем старые строки
+
+        data.forEach(student => {
+            const row = `<tr>
+                <td>${student.id}</td>
+                <td>${student.name}</td>
+                <td>${student.average}</td>
+                <td>${student.finalVerdict}</td>
+            </tr>`;
+            tableBody.innerHTML += row;
+        });
+    }
+</script>
+</body>
+</html>
